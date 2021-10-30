@@ -1,3 +1,4 @@
+import copy
 import logging
 from datetime import datetime
 
@@ -166,7 +167,8 @@ class Subscription(PaddleBaseModel):
         ordering = ["created_at"]
 
     @classmethod
-    def _sanitize_webhook_payload(cls, payload):
+    def _sanitize_webhook_payload(cls, raw):
+        payload = copy.deepcopy(raw)
         data = {}
         data["id"] = payload.pop("subscription_id")
 
