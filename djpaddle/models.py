@@ -2,7 +2,7 @@ import copy
 import logging
 from datetime import datetime
 
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings as djsettings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -206,13 +206,14 @@ class Subscription(PaddleBaseModel):
     def create_or_update_by_payload(cls, payload):
         data = cls._sanitize_webhook_payload(payload)
         pk = data.get("id")
-        try:
-            subscription = cls.objects.get(pk=pk)
-        except cls.DoesNotExist:
-            return cls.objects.create(pk=pk, **data)
+        with transaction.atomic():
+            try:
+                subscription = cls.objects.select_for_update().get(pk=pk)
+            except cls.DoesNotExist:
+                return cls.objects.create(pk=pk, **data)
 
-        if subscription.event_time < data["event_time"]:
-            cls.objects.filter(pk=pk).update(**data)
+            if subscription.event_time < data["event_time"]:
+                cls.objects.filter(pk=pk).update(**data)
 
     def __str__(self):
         return "{}:{}".format(self.subscriber, self.id)
