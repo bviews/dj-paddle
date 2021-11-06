@@ -1,6 +1,7 @@
 import copy
 import logging
 from datetime import datetime
+from time import sleep
 
 from django.db import models, transaction
 from django.conf import settings as djsettings
@@ -237,6 +238,10 @@ class Checkout(models.Model):
 @receiver(signals.subscription_cancelled)
 @receiver(signals.subscription_payment_succeeded)
 def subscription_event(sender, payload, *args, **kwargs):
+    if payload.get("alert_name") == 'subscription_created':
+        # avoid concurrent creation of subscriptions
+        sleep(2)
+
     Subscription.create_or_update_by_payload(payload)
 
 
