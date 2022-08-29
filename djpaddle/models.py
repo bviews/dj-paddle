@@ -163,6 +163,7 @@ class Subscription(PaddleBaseModel):
     plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
     unit_price = models.FloatField()
     update_url = models.URLField()
+    instalments = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ["created_at"]
